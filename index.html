@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Password Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #eef2f7; text-align: center; }
+        .box { background: white; width: 360px; margin: 60px auto; padding: 25px;
+               border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .option { text-align: left; margin: 8px 40px; }
+        input[type=number] { width: 60px; }
+        button { padding: 10px 20px; margin-top: 15px; font-size: 16px; cursor: pointer; }
+        #password { font-size: 20px; font-family: monospace; margin-top: 20px; word-break: break-all; }
+        #strength { font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Smart Password Generator</h2>
+
+        <p>Length (4 - 32): <input type="number" id="length" value="12" min="4" max="32"></p>
+
+        <div class="option"><input type="checkbox" id="upper" checked> Uppercase (A-Z)</div>
+        <div class="option"><input type="checkbox" id="lower" checked> Lowercase (a-z)</div>
+        <div class="option"><input type="checkbox" id="digits" checked> Numbers (0-9)</div>
+        <div class="option"><input type="checkbox" id="symbols" checked> Symbols (!@#$)</div>
+
+        <button onclick="generatePassword()">Generate</button>
+        <button onclick="copyPassword()">Copy</button>
+
+        <div id="password"></div>
+        <div id="strength"></div>
+    </div>
+
+    <script>
+        // Ask the Java backend for a new password
+        function generatePassword() {
+            var length  = document.getElementById("length").value;
+            var upper   = document.getElementById("upper").checked;
+            var lower   = document.getElementById("lower").checked;
+            var digits  = document.getElementById("digits").checked;
+            var symbols = document.getElementById("symbols").checked;
+
+            var url = "/generate?length=" + length + "&upper=" + upper +
+                      "&lower=" + lower + "&digits=" + digits + "&symbols=" + symbols;
+
+            fetch(url)
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (data.password === "") {
+                        document.getElementById("password").innerText = "Select at least one option!";
+                        document.getElementById("strength").innerText = "";
+                        return;
+                    }
+                    document.getElementById("password").innerText = data.password;
+                    document.getElementById("strength").innerText = "Strength: " + data.strength;
+
+                    // Colour the strength text
+                    var color = "red";
+                    if (data.strength === "Medium") color = "orange";
+                    if (data.strength === "Strong") color = "green";
+                    document.getElementById("strength").style.color = color;
+                });
+        }
+
+        // Copy the password to the clipboard
+        function copyPassword() {
+            var text = document.getElementById("password").innerText;
+            navigator.clipboard.writeText(text);
+            alert("Password copied!");
+        }
+    </script>
+</body>
+</html>
